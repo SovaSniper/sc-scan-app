@@ -18,6 +18,7 @@ import { Info } from "@/components/main/info";
 import { useRouter } from "next/navigation";
 import { Contract } from "ethers";
 import { ContractSummary } from "@/components/main/contract-summary";
+import { Spinner } from "@/components/main/spinner";
 
 export default function AppPage() {
   const router = useRouter();
@@ -26,12 +27,14 @@ export default function AppPage() {
   const [contractAddress, setContractAddress] = useState<string>('');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [abiLoading, setABILoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [data, setData] = useState<ABIResponse | null>(null);
   const [triggerSummary, setTriggerSummary] = useState<boolean>(false);
 
   const handleSearch = async () => {
     setIsLoading(true);
+    setABILoading(true);
     setErrorMessage("");
     setData(null);
     setTriggerSummary(false);
@@ -53,6 +56,7 @@ export default function AppPage() {
       console.log(error);
     } finally {
       setIsLoading(false);
+      setABILoading(false);
     }
   }
 
@@ -80,6 +84,7 @@ export default function AppPage() {
             </div>
 
             <div className="p-4 overflow-y-scroll" style={{ maxHeight: "34em" }}>
+              {abiLoading && <Spinner />}
               {errorMessage && <div className="text-red-500">{errorMessage}</div>}
               {data &&
                 <div>
@@ -111,13 +116,13 @@ export default function AppPage() {
               <TabsTrigger value="2">ABI</TabsTrigger>
             </TabsList>
           </Tabs>
-          <ContractSummary trigger={triggerSummary} contract={contractAddress} network={selectedNetwork} />
+          <ContractSummary trigger={triggerSummary} contract={contractAddress} network={selectedNetwork} setIsLoading={setIsLoading} />
           <div className="h-48 pl-4 py-2 rounded-2xl bg-grayscale-025 my-4">
             <div className="font-medium leading-none py-2">
               Info
             </div>
             {data &&
-              <div className="h-36 py-2 pl-4 overflow-y-scroll overflow-x-hidden">
+              <div className="h-36 py-2 pl-4 overflow-y-scroll overflow-x-scroll">
                 <Info title="Verified OnChain" value={data.verified ? "Verified" : "Not Verified"} />
                 <Info title="Verified with ChainLink" value={data.onChainCID ? data.onChainCID : "Not Verified"} />
                 <Info title="Function" value={data.abi.filter(x => x.type === "function").length || 0} />
